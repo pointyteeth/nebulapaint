@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>nebulapaint</title>
+		<meta name="description" content="draw with sparkles">
+		<meta name="author" content="Meena Vempaty">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<script type="text/javascript">
+
+            var squareSize = 10;
+            var width = 720;
+            var height = 480;
+            var down = false;
+            var nebulaSources = ["nebulae/1.jpg", "nebulae/2.jpg", "nebulae/3.jpg", "nebulae/4.jpg"];
+            var bokehSources = ["bokeh/1.jpg", "bokeh/2.jpg", "bokeh/3.jpg", "bokeh/4.jpg"];
+            var catSources = ["cats/1.jpg", "cats/2.jpg", "cats/3.jpg", "cats/4.jpg"];
+            var sources = {"nebula":nebulaSources, "bokeh":bokehSources, "cat":catSources};
+            var textures;
+            var current = 0;
+            var tool = "brush";
+
+            setTexture("nebula");
+
+            $(window).load(function() {
+                var canvas = document.getElementById("canvas");
+                var context = canvas.getContext("2d");
+                var offset = $('#canvas').offset();
+                context.fillStyle="grey";
+
+                $(canvas).mousedown(function() {
+                    down = true;
+                    useTool();
+                }).mouseup(function() {
+                    down = false;
+                }).mousemove(function(event) {
+                    useTool();
+                });
+
+                function useTool() {
+                    if(down) {
+                        if(tool == "brush") {
+                            context.beginPath();
+                            context.rect(Math.floor((event.clientX - offset.left)/squareSize)*squareSize, Math.floor((event.clientY - offset.top)/squareSize)*squareSize, squareSize, squareSize);
+                            context.fill();
+                        } else if(tool == "eraser") {
+                            context.clearRect(Math.floor((event.clientX - offset.left)/squareSize)*squareSize, Math.floor((event.clientY - offset.top)/squareSize)*squareSize, squareSize, squareSize);
+                        }
+                        context.globalCompositeOperation = "source-in";
+                        context.drawImage(textures[current%textures.length], 0, 0, width, height);
+                        current++;
+                        context.globalCompositeOperation = "source-over";
+                    }
+                }
+
+                $("#clear").mouseup(function() {
+                    context.clearRect(0, 0, width, height);
+                });
+                $('#mute:checkbox').click(function() {
+                    if(this.checked) {
+                         document.getElementById("background_audio").muted = true;
+                    } else {
+                         document.getElementById("background_audio").muted = false;
+                    }
+                });
+                $('input[name="tool"]').change(function() {
+                    tool = this.value;
+                });
+                $('input[name="size"]').change(function() {
+                    squareSize = this.value;
+                });
+                $('input[name="texture"]').change(function() {
+                    setTexture(this.value);
+                });
+
+            });
+
+            function setTexture(texture) {
+                textures = [];
+                var newSources = sources[texture];
+                for(var i = 0; i < newSources.length; i++) {
+                    textures.push(new Image());
+                    textures[i].src = newSources[i];
+                }
+            }
+
+        </script>
+		<style type="text/css">
+			body {
+				margin: 0px;
+                padding: 50px;
+                font-family: kubasta, serif;
+                color: hsla(281, 100%, 40%, 0.5);
+			}
+            @font-face {
+                font-family: kubasta;
+                src: url(kubasta.ttf);
+            }
+			#canvas {
+				border: 1px solid hsla(281, 100%, 40%, 0.5);
+                display: inline;
+                cursor:crosshair;
+                padding: 0px;
+			}
+            #title {
+                letter-spacing: 5px;
+                padding: 20px;
+            }
+            #toolbox {
+                display: inline;
+                float: left;
+                text-align: right;
+            }
+            .toolset {
+                display: block;
+                padding: 10px 0px;
+            }
+            #toolbox label {
+                display: block;
+                padding: 10px;
+            }
+            #toolbox label:hover {
+                background-color: hsla(281, 100%, 40%, 0.1);
+            }
+            #toolbox input[type=radio],input[type=checkbox] {
+                display: none;
+            }
+            #toolbox input[type=radio]:checked + label,input[type=checkbox]:checked + label {
+                background-color: hsla(281, 100%, 40%, 0.3);
+            }
+		</style>
+	</head>
+	<body>
+        <div id="title">nebulapaint</div>
+        <div>
+            <div id="toolbox">
+                <div id="options" class="toolset">
+                    <label id="clear">clear</label>
+                    <input type="checkbox" name="vehicle" value="mute" id="mute"><label for="mute">mute</label>
+                </div>
+                <div id="tools" class="toolset">
+                    <input type="radio" name="tool" value="brush" id="brush" checked="checked"><label for="brush">brush</label>
+                    <input type="radio" name="tool" value="eraser" id="eraser"><label for="eraser">eraser</label>
+                </div>
+                <div id="sizes" class="toolset">
+                    <input type="radio" name="size" value=5 id="small"><label for="small">small</label>
+                    <input type="radio" name="size" value=10 id="medium" checked="checked"><label for="medium">medium</label>
+                    <input type="radio" name="size" value=15 id="large"><label for="large">large</label>
+                </div>
+                <div id="textures" class="toolset">
+                    <input type="radio" name="texture" value="nebula" id="nebula" checked="checked"><label for="nebula">nebula</label>
+                    <input type="radio" name="texture" value="bokeh" id="bokeh"><label for="bokeh">bokeh</label>
+                    <input type="radio" name="texture" value="cat" id="cat"><label for="cat">cat</label>
+                </div>
+            </div>
+            <canvas id="canvas" width="720px" height="480px"></canvas>
+        </div>
+        <audio id="background_audio" autoplay="autoplay" loop>
+            <source src="noruniru.mp3" type="audio/mpeg" />
+        </audio>
+	</body>
+</html>
